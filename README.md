@@ -1,4 +1,4 @@
-My personal website, found here: [https://trobson.me]
+My personal website, found here: https://trobson.me
 
 The idea is I can just create a copy of template.html to add new pages to my website
 any content is loaded from this repo, [info](https://github.com/albertoNilWisdom/info)
