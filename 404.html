@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>trobson</title>
+  <link rel="shortcut icon" href="tedicon.png">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+  body {
+    background-color: #222129;
+    color: #447886;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    box-sizing: border-box;
+    margin: 0;
+    padding-top: 48px; /* Default desktop padding */
+    overflow: hidden;
+  }
+
+  /* Responsive padding for smaller screens */
+  @media (max-width: 600px) {
+    body {
+      padding-top: 24px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    body {
+      padding-top: 16px;
+    }
+  }
+
+  pre {
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.2;
+    text-align: center;
+    user-select: none;
+    margin: 0;
+  }
+
+
+    .cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      padding: 8px;
+      background-color: #222129;
+      z-index: 10;
+    }
+
+    .scroll-wrapper {
+      display: flex;
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: scroll;
+      padding: 16px;
+      font-size: 14px;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .content-area::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
+
+    .ascii-scrollbar {
+      width: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+      font-size: 14px;
+      padding-top: 4px;
+    }
+
+    .ascii-thumb {
+      color: #447886;
+    }
+  </style>
+</head>
+<body>
+  <pre id="console"></pre>
+  <div class="cursor"></div>
+
+  <div class="scroll-wrapper">
+    <div id="contentArea" class="content-area"></div>
+    <div class="ascii-scrollbar" id="asciiScrollbar">
+      <!-- ASCII "track" gets filled dynamically -->
+    </div>
+  </div>
+
+  <script>
+    const consoleEl = document.getElementById('console');
+    const contentArea = document.getElementById('contentArea');
+    const scrollbar = document.getElementById('asciiScrollbar');
+
+    let index = 0;
+    let titleText = '';
+
+    const titleUrl = 'https://raw.githubusercontent.com/albertoNilWisdom/info/refs/heads/main/404.txt';
+    //const contentUrl = 'https://raw.githubusercontent.com/albertoNilWisdom/info/refs/heads/main/404.txt';
+
+function typeTitle(callback) {
+  if (index < titleText.length) {
+    // Append one character at a time
+    const currentChar = titleText.charAt(index);
+    // Use innerHTML with a styled link to avoid link styling
+    // We rebuild the whole link content on each iteration
+    const displayedText = titleText.substring(0, index + 1);
+    consoleEl.innerHTML = `<a href="https://trobson.me" style="color: inherit; text-decoration: none; cursor: pointer;">${displayedText}</a>`;
+    index++;
+    setTimeout(() => typeTitle(callback), 10);
+  } else {
+    callback();
+  }
+}
+
+    function loadTitleAndContent() {
+      fetch(titleUrl)
+        .then(res => res.ok ? res.text() : Promise.reject("Failed to load title"))
+        .then(text => {
+          titleText = text;
+          typeTitle(loadTextContent);
+        })
+        .catch(err => {
+          consoleEl.textContent = "[Error loading title]";
+          console.error(err);
+        });
+    }
+
+    function loadTextContent() {
+      fetch(contentUrl)
+        .then(res => res.ok ? res.text() : Promise.reject("Failed to load content"))
+        .then(text => typeContent(text))
+        .catch(err => {
+          contentArea.textContent = "[Error loading content]";
+          console.error(err);
+        });
+    }
+
+    function typeContent(text) {
+      let i = 0;
+      function typeChar() {
+        if (i < text.length) {
+          contentArea.textContent += text.charAt(i);
+          i++;
+          updateAsciiScrollbar(); // update scroll visuals as text grows
+          setTimeout(typeChar, 2.5);
+        }
+      }
+      typeChar();
+    }
+
+    function updateAsciiScrollbar() {
+      const visibleRatio = contentArea.clientHeight / contentArea.scrollHeight;
+      const scrollRatio = contentArea.scrollTop / (contentArea.scrollHeight - contentArea.clientHeight);
+
+      const totalLines = Math.floor(contentArea.clientHeight / 14); // approx line height
+      const thumbSize = Math.max(1, Math.floor(totalLines * visibleRatio * 0.175));
+      const thumbPosition = Math.floor((totalLines - thumbSize) * scrollRatio);
+
+      let scrollbarLines = new Array(totalLines).fill('|');
+      for (let i = 0; i < thumbSize; i++) {
+        scrollbarLines[thumbPosition + i] = '#';
+      }
+
+      scrollbar.innerHTML = scrollbarLines.map(c => `<div class="ascii-thumb">${c}</div>`).join('');
+    }
+
+    contentArea.addEventListener('scroll', updateAsciiScrollbar);
+    window.addEventListener('resize', updateAsciiScrollbar);
+
+    loadTitleAndContent();
+  </script>
+</body>
+</html>
