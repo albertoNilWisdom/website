@@ -146,30 +146,13 @@
         .then(md => typeContent(md))
         .catch(e => { contentArea.textContent='[Error loading content]'; console.error(e); });
     }
-
-
+    
+    
     function typeContent(md) {
-      let i = 0;
-      const rawBuffer = [];
-
-      function step() {
-        if (i < md.length) {
-          const ch = md.charAt(i);
-          rawBuffer.push(ch);
-          contentArea.textContent = rawBuffer.join('');
-          i++;
-          updateAsciiScrollbar();
-          setTimeout(step, 0);
-        } else {
-          // All characters typed – now turn the raw markdown into HTML
-          const html = parseMarkdown(rawBuffer.join(''));
-          contentArea.innerHTML = html;
-          // Re‑run scrollbar calculation because innerHTML may change height
-          updateAsciiScrollbar();
-        }
-      }
-      step();
+      contentArea.innerHTML = parseMarkdown(md);
+      updateAsciiScrollbar();
     }
+    
 
 
     function parseMarkdown(md) {
